@@ -66,6 +66,9 @@ export default {
     }
   },
   mounted() {
+    // if ((window.location.pathname != "/login") && (window.location.pathname != "/signup") && (window.location.pathname != "/verify-email") && (window.location.pathname != "/forget-password") && (window.location.pathname != "/resend-code") && (window.location.pathname != "/confirm-forget-password")) {
+    //   this.$store.dispatch("getUserProfile");
+    // }
   }
 };
 </script>
