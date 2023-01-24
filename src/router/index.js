@@ -84,21 +84,21 @@ const router = createRouter({
 });
 
 // router middleware
-// router.beforeEach((to, from, next) => {
-//   if(to.matched.some((record) => record.meta.requiresAuth)){
-//     if(localStorage.getItem("isLoggedIn")){
-//       next()
-//     }else{
-//       next('/login')
-//     }
-//   }
-//   if(to.matched.some((record) => record.meta.redirectAuthenticatedUser)){
-//     if(localStorage.getItem("isLoggedIn")){
-//       next('/')
-//     }else{
-//       next()
-//     }
-//   }
-// })
+router.beforeEach((to, from, next) => {
+  if(to.matched.some((record) => record.meta.requiresAuth)){
+    if(localStorage.getItem("isLoggedIn")){
+      next()
+    }else{
+      next('/login')
+    }
+  }
+  if(to.matched.some((record) => record.meta.redirectAuthenticatedUser)){
+    if(localStorage.getItem("isLoggedIn")){
+      next('/')
+    }else{
+      next()
+    }
+  }
+})
 
 export default router;
