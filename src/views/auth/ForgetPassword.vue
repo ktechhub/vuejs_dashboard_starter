@@ -27,11 +27,16 @@
                             <h5>Forgot Password</h5>
                         </div>
                         <div class="card-body">
-                            <form role="form">
-                                <argon-input type="email" placeholder="Email" aria-label="Email" />
+                            <form role="form" @submit="forgetPassword">
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input id="email" type="email" class="form-control" name="email"
+                                        v-model="form.email" required placeholder="your email" />
+                                    <div class="invalid-feedback"></div>
+                                </div>
                                 <div class="text-center">
-                                    <argon-button fullWidth color="dark" variant="gradient"
-                                        class="my-4 mb-2">Submit</argon-button>
+                                    <argon-button fullWidth color="dark" variant="gradient" class="my-4 mb-2"
+                                        type="submit" :isLoading="isLoading">Submit</argon-button>
                                 </div>
                                 <p class="text-sm mt-3 mb-0">
                                     Remembered your password?
@@ -48,10 +53,11 @@
 </template>
 
 <script>
+import axios from "axios";
 import Navbar from "@/examples/PageLayout/Navbar.vue";
 import AppFooter from "@/examples/PageLayout/Footer.vue";
-import ArgonInput from "@/components/ArgonInput.vue";
 import ArgonButton from "@/components/ArgonButton.vue";
+import Toast from "../../helpers/Toast";
 const body = document.getElementsByTagName("body")[0];
 
 export default {
@@ -59,8 +65,15 @@ export default {
     components: {
         Navbar,
         AppFooter,
-        ArgonInput,
         ArgonButton,
+    },
+    data() {
+        return {
+            isLoading: false,
+            form: {
+                email: ""
+            },
+        };
     },
     created() {
         this.$store.state.hideConfigButton = true;
@@ -75,6 +88,26 @@ export default {
         this.$store.state.showSidenav = true;
         this.$store.state.showFooter = true;
         body.classList.add("bg-gray-100");
+    },
+    methods: {
+        async forgetPassword(e) {
+            e.preventDefault();
+            //Show progress indicator
+            this.isLoading = true;
+            const base_url = await this.$store.state.base_url;
+            await axios
+                .post(base_url + "/auth/forget-password/", this.form)
+                .then((response) => {
+                    // Stop progress indicator
+                    this.isLoading = false;
+                    Toast.makeToast("success", response.data["message"])
+                    this.$router.push("/confirm-forget-password?email=" + `${this.form.email}`);
+                })
+                .catch((error) => {
+                    this.isLoading = false;
+                    Toast.makeToast("danger", error.response.data["message"])
+                });
+        },
     },
 };
 </script>
