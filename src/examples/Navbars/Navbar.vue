@@ -19,11 +19,10 @@
         </div>
         <ul class="navbar-nav justify-content-end">
           <li class="nav-item d-flex align-items-center">
-            <router-link :to="{ name: 'Login' }" class="px-0 nav-link font-weight-bold text-white" target="_blank">
-              <i class="fa fa-user" :class="this.$store.state.isRTL ? 'ms-sm-2' : 'me-sm-2'"></i>
-              <span v-if="this.$store.state.isRTL" class="d-sm-inline d-none">يسجل دخول</span>
-              <span v-else class="d-sm-inline d-none">Sign In</span>
-            </router-link>
+            <a @click="logout" href="#" class="px-0 nav-link font-weight-bold text-white" target="_blank">
+              <i class="fa fa-user me-sm-2"></i>
+              <span class="d-sm-inline d-none">Logout</span>
+            </a>
           </li>
           <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
             <a href="#" @click="toggleSidebar" class="p-0 nav-link text-white" id="iconNavbarSidenav">
@@ -148,7 +147,10 @@ export default {
     toggleSidebar() {
       this.toggleSidebarColor("bg-white");
       this.navbarMinimize();
-    }
+    },
+    async logout() {
+      await this.$store.dispatch("logout");
+    },
   },
   components: {
     Breadcrumbs
