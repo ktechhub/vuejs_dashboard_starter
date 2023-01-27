@@ -6,6 +6,8 @@ import "./assets/css/nucleo-icons.css";
 import "./assets/css/nucleo-svg.css";
 import ArgonDashboard from "./argon-dashboard";
 
+import 'mosha-vue-toastify/dist/style.css'
+
 const appInstance = createApp(App);
 appInstance.use(store);
 appInstance.use(router);
