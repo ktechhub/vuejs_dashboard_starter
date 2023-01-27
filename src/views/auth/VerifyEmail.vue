@@ -25,16 +25,35 @@
                     <div class="card z-index-0">
                         <div class="card-header text-center pt-4">
                             <h5>Verify Email</h5>
+                            <p v-if="failure" class="alert alert-danger" role="alert">
+                                {{ message }}
+                            </p>
+                            <p v-if="success" class="alert alert-success" role="alert">
+                                {{ message }}
+                            </p>
                         </div>
                         <div class="card-body">
-                            <form role="form">
-                                <argon-input type="email" placeholder="Email" aria-label="Email" />
-                                <argon-input type="text" placeholder="Verification Code" aria-label="Verification Code" />
+                            <form role="form" @submit="verfiyEmail">
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input id="email" type="email" class="form-control" name="email"
+                                        v-model="form.email" required placeholder="your email" />
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="code">Verification Code</label>
+                                    <input id="code" v-model="form.code" type="text" class="form-control" name="code"
+                                        tabindex="1" required autofocus placeholder="*****" />
+                                </div>
                                 <div class="text-center">
-                                    <argon-button fullWidth color="dark" variant="gradient"
-                                        class="my-4 mb-2">Verify</argon-button>
+                                    <argon-button fullWidth color="dark" variant="gradient" class="my-4 mb-2"
+                                        type="submit" :isLoading="isLoading">Verify</argon-button>
                                 </div>
                             </form>
+                            <p>
+                                If you are not receiving verification emails, <a href="#" @click="resendCode">click here
+                                    to resend verification code to your email</a>.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -47,16 +66,31 @@
 <script>
 import Navbar from "@/examples/PageLayout/Navbar.vue";
 import AppFooter from "@/examples/PageLayout/Footer.vue";
-import ArgonInput from "@/components/ArgonInput.vue";
 import ArgonButton from "@/components/ArgonButton.vue";
+import axios from "axios";
+import Toast from "../../helpers/Toast";
 const body = document.getElementsByTagName("body")[0];
 
 export default {
     name: "VerifyEmail",
+    data() {
+        return {
+            isLoading: false,
+            form: {
+                code: "",
+                email: ""
+            },
+            message: "",
+            success: false,
+            failure: false,
+        };
+    },
+    mounted() {
+        this.form.email = this.$route.query.email;
+    },
     components: {
         Navbar,
         AppFooter,
-        ArgonInput,
         ArgonButton,
     },
     created() {
@@ -73,5 +107,55 @@ export default {
         this.$store.state.showFooter = true;
         body.classList.add("bg-gray-100");
     },
+    methods: {
+        async verfiyEmail(e) {
+            e.preventDefault();
+            //Show progress indicator
+            this.isLoading = true;
+            const base_url = await this.$store.state.base_url;
+            await axios
+                .post(base_url + "/auth/confirm-register/", this.form)
+                .then((response) => {
+                    this.failure = false;
+                    this.success = true;
+                    this.message = response.data["message"];
+                    localStorage.setItem("isLoggedIn", true);
+                    localStorage.setItem("aut", this.encodeToken(response.data.tokens["access_token"]));
+                    localStorage.setItem("rut", this.encodeToken(response.data.tokens["refresh_token"]));
+                    this.$store.state.userProfile = response.data.data;
+                    // Stop progress indicator
+                    this.isLoading = false;
+                    // Alert
+                    Toast.makeToast("success", response.data["message"]);
+                    this.$router.push("/dashboard");
+                })
+                .catch((error) => {
+                    this.isLoading = false;
+                    this.success = false;
+                    this.failure = true;
+                    Toast.makeToast("danger", error.response.data["message"])
+                    this.message = error.response.data["message"];
+                });
+        },
+        async resendCode(e) {
+            e.preventDefault();
+            //Show progress indicator
+            const base_url = await this.$store.state.base_url;
+            await axios
+                .post(base_url + "/auth/resend-code/", { "email": this.form.email })
+                .then((response) => {
+                    // Stop progress indicator
+                    this.isLoading = false;
+                    Toast.makeToast("success", response.data["message"])
+                })
+                .catch((error) => {
+                    this.isLoading = false;
+                    Toast.makeToast("danger", error.response.data["message"])
+                });
+        },
+        encodeToken(token) {
+            return window.btoa(this.$store.state.randString + token + this.$store.state.randString);
+        }
+    }
 };
 </script>
