@@ -14,8 +14,7 @@
         <div class="row justify-content-center">
           <div class="col-lg-5 text-center mx-auto">
             <h1 class="text-white mb-2 mt-5">Welcome!</h1>
-            <p class="text-lead text-white">Use these awesome forms to login or create new account in your project for
-              free.</p>
+            <p class="text-lead text-white">Kindly choose a method to register for free.</p>
           </div>
         </div>
       </div>
@@ -37,19 +36,71 @@
               <h5>Register with</h5>
             </div>
             <div class="card-body">
-              <form role="form">
-                <argon-input type="text" placeholder="Name" aria-label="Name" />
-                <argon-input type="email" placeholder="Email" aria-label="Email" />
-                <argon-input type="password" placeholder="Password" aria-label="Password" />
-                <argon-checkbox checked>
-                  <label class="form-check-label" for="flexCheckDefault">
-                    I agree the
-                    <a href="javascript:;" class="text-dark font-weight-bolder">Terms and Conditions</a>
-                  </label>
-                </argon-checkbox>
-                <div class="text-center">
-                  <argon-button fullWidth color="dark" variant="gradient" class="my-4 mb-2">Sign Up</argon-button>
+              <form @submit="signup">
+                <div class="row">
+                  <div class="form-group col-6">
+                    <label for="frist_name">First Name</label>
+                    <input id="frist_name" type="text" class="form-control" name="frist_name" v-model="form.first_name"
+                      required />
+                  </div>
+                  <div class="form-group col-6">
+                    <label for="last_name">Last Name</label>
+                    <input id="last_name" type="text" class="form-control" name="last_name" v-model="form.last_name"
+                      required />
+                  </div>
                 </div>
+                <div class="form-group">
+                  <label for="email">Email</label>
+                  <input id="email" type="email" class="form-control" name="email" v-model="form.email" required />
+                  <div class="invalid-feedback"></div>
+                </div>
+                <div class="row">
+                  <div class="form-group col-6">
+                    <label for="password" class="d-block">Password</label>
+                    <input id="password" type="password" class="form-control pwstrength" data-indicator="pwindicator"
+                      name="password" v-model="form.password1" required />
+                    <div id="pwindicator" class="pwindicator">
+                      <div class="bar"></div>
+                      <div class="label"></div>
+                    </div>
+                  </div>
+                  <div class="form-group col-6">
+                    <label for="password2" class="d-block">Password Confirmation</label>
+                    <input id="password2" type="password" class="form-control" name="password-confirm"
+                      v-model="form.password2" required />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" name="is_auth" class="" id="is_auth" :checked="form.is_author"
+                      v-model="form.is_author" />
+                    <label class="form-check-label" for="is_auth">Do you want to be an author?</label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="country" class="form-label">Your
+                    Country</label>
+                  <select v-model="form.country" name="country" id="country" class="form-control" required="">
+                    <option value="">Select Country</option>
+                    <option :value="country.id" v-for="country in countries" :key="country.id">{{ country.name }}</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" name="agree" class="custom-control-input" id="agree" required />
+                    <label class="custom-control-label" for="agree">I agree with the terms and conditions</label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="text-center">
+                    <argon-button fullWidth color="dark" variant="gradient" class="my-4 mb-2" type="submit"
+                      :isLoading="isLoading">Sign
+                      Up</argon-button>
+                  </div>
+                </div>
+
                 <p class="text-sm mt-3 mb-0">
                   Already have an account?
                   <router-link to="/login" class="text-dark font-weight-bolder">Sign In</router-link>
@@ -67,18 +118,38 @@
 <script>
 import Navbar from "@/examples/PageLayout/Navbar.vue";
 import AppFooter from "@/examples/PageLayout/Footer.vue";
-import ArgonInput from "@/components/ArgonInput.vue";
-import ArgonCheckbox from "@/components/ArgonCheckbox.vue";
 import ArgonButton from "@/components/ArgonButton.vue";
+import Toast from "../../helpers/Toast";
+import axios from "axios";
+// import apiService from '../../services/api.service'
+
 const body = document.getElementsByTagName("body")[0];
 
 export default {
   name: "signup",
+  data() {
+    return {
+      countries: [],
+      isLoading: false,
+      googleAuthStatus: false,
+      form: {
+        email: "",
+        password1: "",
+        password2: "",
+        first_name: "",
+        last_name: "",
+        is_author: false,
+        country: ""
+      },
+      socialForm: {
+        is_author: "",
+        auth_token: ""
+      }
+    };
+  },
   components: {
     Navbar,
     AppFooter,
-    ArgonInput,
-    ArgonCheckbox,
     ArgonButton,
   },
   created() {
@@ -95,5 +166,85 @@ export default {
     this.$store.state.showFooter = true;
     body.classList.add("bg-gray-100");
   },
+  mounted() {
+    this.getCountries();
+  },
+  methods: {
+    async getCountries() {
+      const base_url = await this.$store.state.base_url;
+      axios
+        .get(base_url + "/general/countries/").then((response) => {
+          this.countries.push(...response.data.results);
+          console.log(this.countries);
+        }, (error) => {
+          this.countries =
+            (error.response &&
+              error.response.data &&
+              error.response.data.message) ||
+            error.message ||
+            error.toString();
+        });
+    },
+    async signup(e) {
+      e.preventDefault();
+      //Show progress indicator
+      this.isLoading = true;
+      const base_url = await this.$store.state.base_url;
+      axios
+        .post(base_url + "/auth/register/", this.form)
+        .then(() => {
+          // Stop progress indicator
+          this.isLoading = false;
+          // Alert
+          Toast.makeToast("success", "Registration successful");
+          this.$router.push("/verify-email?email=" + `${this.form.email}`);
+        })
+        .catch((err) => {
+          this.isLoading = false;
+          // Alert
+          if (err.response.status === 500) {
+            Toast.makeToast("danger", "Oops! An error occured. Please try again");
+          } else {
+            Toast.makeToast("danger", "Oops! An error occured...");
+            Toast.makeToast("info", err.response.data.message);
+          }
+        });
+    },
+    callback(response) {
+      this.googleAuthStatus = true;
+      this.socialForm.auth_token = response.credential;
+    },
+    async googleSignUp(e) {
+      e.preventDefault();
+      //Show progress indicator
+      console.log("Auth Token");
+      console.log(this.socialForm.auth_token);
+      this.isLoading = true;
+      const base_url = await this.$store.state.base_url;
+      const config = {
+        headers: { "Content-Type": "application/json", "accept": "application/json" },
+      };
+      axios
+        .post(base_url + "/auth/google/", this.socialForm, config)
+        .then((response) => {
+          console.log(response.data);
+          localStorage.setItem("isLoggedIn", true);
+          localStorage.setItem("aut", this.encodeToken(response.data.tokens["access_token"]));
+          localStorage.setItem("rut", this.encodeToken(response.data.tokens["refresh_token"]));
+          this.$store.state.userProfile = response.data.data;
+          // Stop progress indicator
+          this.isLoading = false;
+          this.$router.push("/dashboard");
+          Toast.makeToast("success", "Sign Up Successfully!")
+        })
+        .catch(() => {
+          this.isLoading = false;
+          Toast.makeToast("danger", `Oops... Error`)
+        });
+    },
+    encodeToken(token) {
+      return window.btoa(this.$store.state.randString + token + this.$store.state.randString);
+    }
+  }
 };
 </script>
