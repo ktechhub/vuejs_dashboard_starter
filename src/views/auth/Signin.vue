@@ -24,10 +24,7 @@
       <div class="row mt-lg-n10 mt-md-n11 mt-n10 justify-content-center">
         <div class="col-xl-4 col-lg-5 col-md-7 mx-auto">
           <div class="card z-index-0">
-            <div class="card-header text-center pt-4">
-              <h5>Login with</h5>
-            </div>
-            <div class="row px-xl-5 px-sm-4 px-3">
+            <div class="row px-xl-5 px-sm-4 px-3 mt-4">
               <div class="d-flex justify-content-center">
                 <GoogleLogin :callback="callback" prompt />
               </div>
