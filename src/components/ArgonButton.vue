@@ -2,7 +2,7 @@
 <template>
   <button class="btn mb-0" :type="type" :class="getClasses(variant, color, size, fullWidth, active)">
     <slot />
-    <span v-show="isLoading" class="spinner-border spinner-border-sm"></span>
+    <span v-show="isLoading" class="spinner-border spinner-border-sm ml-5"></span>
   </button>
 </template>
 

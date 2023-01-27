@@ -30,6 +30,7 @@
     "vue": "3.2.0",
     "vue-flatpickr-component": "9.0.5",
     "vue-router": "4.0.14",
+    "vue3-google-login": "^2.0.12",
     "vuex": "4.0.2"
   },
   "devDependencies": {
