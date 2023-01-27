@@ -27,16 +27,33 @@
                             <h5>Password Reset</h5>
                         </div>
                         <div class="card-body">
-                            <form role="form">
-                                <argon-input type="email" placeholder="Email" aria-label="Email" />
-                                <argon-input type="text" placeholder="Verification Code"
-                                    aria-label="Verification Code" />
-                                <argon-input type="password" placeholder="Password" aria-label="Password" />
+                            <form role="form" @submit="confirmForgetPass">
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input id="email" type="email" class="form-control" name="email"
+                                        v-model="form.email" required placeholder="your email" />
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="code" class="mb-2">Verification Code</label>
+                                    <input id="code" v-model="form.code" type="text" class="form-control" name="code"
+                                        tabindex="1" required autofocus placeholder="*****" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="new_password" class="mb-2">New Password</label>
+                                    <input id="new_password" v-model="form.new_password" type="password"
+                                        class="form-control" name="new_password" tabindex="1" required autofocus
+                                        placeholder="Enter new password" />
+                                </div>
                                 <div class="text-center">
-                                    <argon-button fullWidth color="dark" variant="gradient"
-                                        class="my-4 mb-2">Reset</argon-button>
+                                    <argon-button fullWidth color="dark" variant="gradient" class="my-4 mb-2"
+                                        type="submit" :isLoading="isLoading">Reset Password</argon-button>
                                 </div>
                             </form>
+                            <p>
+                                If you are not receiving verification emails, <a href="#" @click="resendCode">click to
+                                    resend verification code to your email</a>.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -47,10 +64,11 @@
 </template>
 
 <script>
+import axios from "axios";
 import Navbar from "@/examples/PageLayout/Navbar.vue";
 import AppFooter from "@/examples/PageLayout/Footer.vue";
-import ArgonInput from "@/components/ArgonInput.vue";
 import ArgonButton from "@/components/ArgonButton.vue";
+import Toast from "../../helpers/Toast";
 const body = document.getElementsByTagName("body")[0];
 
 export default {
@@ -58,8 +76,23 @@ export default {
     components: {
         Navbar,
         AppFooter,
-        ArgonInput,
         ArgonButton,
+    },
+    data() {
+        return {
+            isLoading: false,
+            form: {
+                code: "",
+                email: "",
+                new_password: "",
+            },
+            message: "",
+            success: false,
+            failure: false,
+        };
+    },
+    mounted() {
+        this.form.email = this.$route.query.email;
     },
     created() {
         this.$store.state.hideConfigButton = true;
@@ -74,6 +107,52 @@ export default {
         this.$store.state.showSidenav = true;
         this.$store.state.showFooter = true;
         body.classList.add("bg-gray-100");
+    },
+    methods: {
+        async confirmForgetPass(e) {
+            e.preventDefault();
+            //Show progress indicator
+            this.isLoading = true;
+            const base_url = await this.$store.state.base_url;
+            const config = {
+                headers: { "Content-Type": "application/json", "accept": "application/json" },
+            };
+            await axios
+                .post(base_url + "/auth/confirm-forget-password/", this.form, config)
+                .then((response) => {
+                    // Stop progress indicator
+                    this.isLoading = false;
+                    this.failure = false;
+                    this.success = true;
+                    this.message = response.data["message"];
+                    Toast.makeToast("success", response.data["message"])
+                    this.$router.push("/login");
+                })
+                .catch((error) => {
+                    this.isLoading = false;
+                    this.success = false;
+                    this.failure = true;
+                    Toast.makeToast("danger", error.response.data["message"])
+                    this.message = error.response.data["message"];
+                });
+        },
+        async resendCode(e) {
+            e.preventDefault();
+            // Show progress indicator
+            const base_url = await this.$store.state.base_url;
+            await axios
+                .post(base_url + "/auth/forget-password/", { "email": this.form.email })
+                .then((response) => {
+                    // Stop progress indicator
+                    this.isLoading = false;
+                    Toast.makeToast("success", response.data["message"]);
+                })
+                .catch((error) => {
+                    // Stop progress indicator
+                    this.isLoading = false;
+                    Toast.makeToast("danger", error.response.data["message"]);
+                });
+        },
     },
 };
 </script>
