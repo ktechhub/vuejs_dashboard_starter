@@ -1,7 +1,8 @@
 /* eslint-disable prettier/prettier */
 <template>
-  <button class="btn mb-0" :class="getClasses(variant, color, size, fullWidth, active)">
+  <button class="btn mb-0" :type="type" :class="getClasses(variant, color, size, fullWidth, active)">
     <slot />
+    <span v-show="isLoading" class="spinner-border spinner-border-sm"></span>
   </button>
 </template>
 
@@ -13,6 +14,7 @@ export default {
       type: String,
       default: "info",
     },
+    isLoading: Boolean,
     size: {
       type: String,
       default: "md",
@@ -20,6 +22,10 @@ export default {
     variant: {
       type: String,
       default: "fill",
+    },
+    type: {
+      type: String,
+      default: "button",
     },
     fullWidth: {
       type: Boolean,

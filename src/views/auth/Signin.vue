@@ -82,14 +82,21 @@
               </div>
             </div>
             <div class="card-body">
-              <form role="form">
-                <argon-input type="email" placeholder="Email" aria-label="Email" />
-                <argon-input type="password" placeholder="Password" aria-label="Password" />
+              <form role="form" @submit="login">
+                <div class="form-group">
+                <input id="email" v-model="form.email" type="email" class="form-control" name="email" required
+                  placeholder="Email" aria-label="Email" />
+                </div>
+                <div class="form-group">
+                <input id="password" v-model="form.password" type="password" class="form-control" name="password"
+                  required placeholder="Password" aria-label="Password" />
+                </div>
                 <p class="text-sm mt-1">
                   <router-link to="/forget-password" class="text-dark font-weight-bolder">Forget Password?</router-link>
                 </p>
                 <div class="text-center">
-                  <argon-button fullWidth color="dark" variant="gradient" class="my-4 mb-2">Sign In</argon-button>
+                  <argon-button fullWidth color="dark" variant="gradient" class="my-4 mb-2" type="submit">Sign
+                    In</argon-button>
                 </div>
                 <p class="text-sm mt-3 mb-0">
                   Don't have an account?
@@ -108,16 +115,27 @@
 <script>
 import Navbar from "@/examples/PageLayout/Navbar.vue";
 import AppFooter from "@/examples/PageLayout/Footer.vue";
-import ArgonInput from "@/components/ArgonInput.vue";
 import ArgonButton from "@/components/ArgonButton.vue";
+import Toast from "../../helpers/Toast";
+// import apiService from '../../services/api.service'
+import axios from 'axios';
 const body = document.getElementsByTagName("body")[0];
 
 export default {
   name: "signin",
+  data() {
+    return {
+      isLoading: false,
+      form: {
+        email: "",
+        password: "",
+      },
+      notVerified: false
+    };
+  },
   components: {
     Navbar,
     AppFooter,
-    ArgonInput,
     ArgonButton,
   },
   created() {
@@ -134,5 +152,66 @@ export default {
     this.$store.state.showFooter = true;
     body.classList.add("bg-gray-100");
   },
+  methods: {
+    async login(e) {
+      e.preventDefault();
+      //Show progress indicator
+      this.isLoading = true;
+      const base_url = await this.$store.state.base_url;
+      axios.post(base_url + "/auth/login/", this.form)
+        .then((response) => {
+          console.log(response.data);
+          localStorage.setItem("isLoggedIn", true);
+          localStorage.setItem("aut", this.encodeToken(response.data["access_token"]));
+          localStorage.setItem("rut", this.encodeToken(response.data["refresh_token"]));
+          this.$store.state.userProfile = response.data["data"];
+          // Stop progress indicator
+          this.isLoading = false;
+          // Alert
+          Toast.makeToast("success", "Login successful");
+          this.$router.push("/dashboard");
+        })
+        .catch((error) => {
+          this.isLoading = false;
+          Toast.makeToast("danger", error.response.data["message"]);
+          if (error.response.data["status"] === 401) {
+            Toast.makeToast("danger", error.response.data["message"]);
+            this.$router.push("/verify-email?email=" + `${this.form.email}`);
+          }
+          this.notVerified = true;
+        });
+    },
+    encodeToken(token) {
+      return window.btoa(this.$store.state.randString + token + this.$store.state.randString);
+    },
+    async callback(response) {
+      this.googleAuthStatus = true;
+      let socialForm =  {
+        "auth_token": response.credential,
+        "business_name": "dijievents"
+      }
+      this.isLoading = true;
+      const base_url = await this.$store.state.base_url;
+      const config = {
+        headers: { "Content-Type": "application/json", "accept": "application/json" },
+      };
+      axios
+        .post(base_url + "/auth/google/", socialForm, config)
+        .then((response) => {
+          localStorage.setItem("isLoggedIn", true);
+          localStorage.setItem("aut", this.encodeToken(response.data.tokens["access_token"]));
+          localStorage.setItem("rut", this.encodeToken(response.data.tokens["refresh_token"]));
+          this.$store.state.userProfile = response.data.data;
+          // Stop progress indicator
+          this.isLoading = false;
+          this.$router.push("/");
+          Toast.makeToast("success", "Login Successful");
+        })
+        .catch(() => {
+          this.isLoading = false;
+          Toast.makeToast("danger", `Oops... Error`);
+        });
+    },
+  }
 };
 </script>
