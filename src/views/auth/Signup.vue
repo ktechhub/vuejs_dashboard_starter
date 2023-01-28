@@ -10,7 +10,7 @@
     <div class="page-header align-items-start min-vh-50 pt-5 pb-11 m-3 border-radius-lg"
       style="background-image: url('https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-dashboard-pro/assets/img/signup-cover.jpg'); background-position: top;">
       <span class="mask bg-gradient-dark opacity-6"></span>
-      <div class="container">
+      <div class="container"  v-if="!googleAuthStatus">
         <div class="row justify-content-center">
           <div class="col-lg-5 text-center mx-auto">
             <h1 class="text-white mb-2 mt-5">Welcome!</h1>
@@ -23,7 +23,7 @@
       <div class="row mt-lg-n10 mt-md-n11 mt-n10 justify-content-center">
         <div class="col-xl-4 col-lg-5 col-md-7 mx-auto">
           <div class="card z-index-0">
-            <div class="row px-xl-5 px-sm-4 px-3 pt-4">
+            <div class="row px-xl-5 px-sm-4 px-3 pt-4"  v-if="!googleAuthStatus">
               <div class="d-flex justify-content-center">
                 <GoogleLogin :callback="callback" prompt />
               </div>
@@ -32,10 +32,10 @@
                 </p>
               </div>
             </div>
-            <div class="card-header text-center">
+            <div class="card-header text-center"  v-if="!googleAuthStatus">
               <h5>Register with</h5>
             </div>
-            <div class="card-body">
+            <div class="card-body" v-if="!googleAuthStatus">
               <form @submit="signup">
                 <div class="row">
                   <div class="form-group col-6">
@@ -70,7 +70,15 @@
                       v-model="form.password2" required />
                   </div>
                 </div>
-
+                <div class="form-group">
+                  <label for="country" class="form-label">Your
+                    Country</label>
+                  <select v-model="form.country" name="country" id="country" class="form-control" required="">
+                    <option value="">Select Country</option>
+                    <option :value="country.id" v-for="country in countries" :key="country.id">{{ country.name }}
+                    </option>
+                  </select>
+                </div>
                 <div class="form-group">
                   <div class="custom-control custom-checkbox">
                     <input type="checkbox" name="is_auth" class="" id="is_auth" :checked="form.is_author"
@@ -78,15 +86,6 @@
                     <label class="form-check-label" for="is_auth">Do you want to be an author?</label>
                   </div>
                 </div>
-                <div class="form-group">
-                  <label for="country" class="form-label">Your
-                    Country</label>
-                  <select v-model="form.country" name="country" id="country" class="form-control" required="">
-                    <option value="">Select Country</option>
-                    <option :value="country.id" v-for="country in countries" :key="country.id">{{ country.name }}</option>
-                  </select>
-                </div>
-
                 <div class="form-group">
                   <div class="custom-control custom-checkbox">
                     <input type="checkbox" name="agree" class="custom-control-input" id="agree" required />
@@ -105,6 +104,30 @@
                   Already have an account?
                   <router-link to="/login" class="text-dark font-weight-bolder">Sign In</router-link>
                 </p>
+              </form>
+            </div>
+            <div class="card-body" v-if="googleAuthStatus">
+              <form @submit="googleSignUp">
+                <div class="form-group">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" name="is_auth" class="" id="is_auth" :checked="form.is_author"
+                      v-model="form.is_author" />
+                    <label class="form-check-label" for="is_auth">Do you want to be an author?</label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" name="agree" class="custom-control-input" id="agree" required />
+                    <label class="custom-control-label" for="agree">I agree with the terms and conditions</label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="text-center">
+                    <argon-button fullWidth color="dark" variant="gradient" class="my-4 mb-2" type="submit"
+                      :isLoading="isLoading">Sign
+                      Up</argon-button>
+                  </div>
+                </div>
               </form>
             </div>
           </div>
