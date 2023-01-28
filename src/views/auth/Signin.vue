@@ -136,6 +136,7 @@ export default {
       return window.btoa(this.$store.state.randString + token + this.$store.state.randString);
     },
     async callback(response) {
+      console.log(response);
       this.googleAuthStatus = true;
       let socialForm = {
         "auth_token": response.credential,
@@ -149,6 +150,7 @@ export default {
       axios
         .post(base_url + "/auth/google/", socialForm, config)
         .then((response) => {
+          console.log(response.data);
           localStorage.setItem("isLoggedIn", true);
           localStorage.setItem("aut", this.encodeToken(response.data.tokens["access_token"]));
           localStorage.setItem("rut", this.encodeToken(response.data.tokens["refresh_token"]));
@@ -158,8 +160,9 @@ export default {
           this.$router.push("/dashboard");
           Toast.makeToast("success", "Login Successful");
         })
-        .catch(() => {
+        .catch((error) => {
           this.isLoading = false;
+          console.log(error.response);
           Toast.makeToast("danger", `Oops... Error`);
         });
     },
