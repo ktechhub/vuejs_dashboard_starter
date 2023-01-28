@@ -59,16 +59,19 @@ const routes = [
     path: "/tables",
     name: "Tables",
     component: Tables,
+    meta: {requiresAuth: true},
   },
   {
     path: "/billing",
     name: "Billing",
     component: Billing,
+    meta: {requiresAuth: true},
   },
   {
     path: "/virtual-reality",
     name: "Virtual Reality",
     component: VirtualReality,
+    meta: {requiresAuth: true},
   },
   {
     path: "/profile",

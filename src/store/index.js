@@ -90,11 +90,11 @@ export default createStore({
         axios.post(base_url + '/auth/token/refresh/', { "refresh": getToken("rut") })
           .then((response) => {
             localStorage.setItem("aut", encodeToken(response.data.access));
-            location.reload()
+            window.location.reload()
           })
           .catch((err) => {
             if (err.message === 'Network Error') {
-              console.log("No internet")
+              console.log("No internet");
             } else {
               dispatch("logout");
             }
