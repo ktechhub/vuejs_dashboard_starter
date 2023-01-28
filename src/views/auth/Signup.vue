@@ -110,8 +110,8 @@
               <form @submit="googleSignUp">
                 <div class="form-group">
                   <div class="custom-control custom-checkbox">
-                    <input type="checkbox" name="is_auth" class="" id="is_auth" :checked="form.is_author"
-                      v-model="form.is_author" />
+                    <input type="checkbox" name="is_auth" class="" id="is_auth" :checked="socialForm.is_author"
+                      v-model="socialForm.is_author" />
                     <label class="form-check-label" for="is_auth">Do you want to be an author?</label>
                   </div>
                 </div>
@@ -165,7 +165,7 @@ export default {
         country: ""
       },
       socialForm: {
-        is_author: "",
+        is_author: false,
         auth_token: ""
       }
     };
@@ -250,7 +250,6 @@ export default {
       axios
         .post(base_url + "/auth/google/", this.socialForm, config)
         .then((response) => {
-          console.log(response.data);
           localStorage.setItem("isLoggedIn", true);
           localStorage.setItem("aut", this.encodeToken(response.data.tokens["access_token"]));
           localStorage.setItem("rut", this.encodeToken(response.data.tokens["refresh_token"]));
